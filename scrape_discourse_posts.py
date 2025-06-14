@@ -1,11 +1,11 @@
 import requests
 import json
 from datetime import datetime
+import os # Import the os module
 
-def login_and_scrape_discourse_posts(username, password):
+def login_and_scrape_discourse_posts(): # No arguments needed for username/password
     session = requests.Session()
 
-    # Custom headers to mimic a browser.
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                       "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -28,11 +28,19 @@ def login_and_scrape_discourse_posts(username, password):
     
     # Step 2: Login using the CSRF token.
     login_url = "https://discourse.onlinedegree.iitm.ac.in/session"
+    
+    # Get credentials from environment variables
+    username = os.environ.get("DISCOURSE_USERNAME")
+    password = os.environ.get("DISCOURSE_PASSWORD")
+
+    if not username or not password:
+        print("Error: DISCOURSE_USERNAME and DISCOURSE_PASSWORD environment variables must be set.")
+        return
+
     payload = {
         "login": username,
         "password": password
     }
-    # Copy the headers and add the CSRF token.
     login_headers = headers.copy()
     login_headers["X-CSRF-Token"] = csrf_token
 
@@ -52,7 +60,6 @@ def login_and_scrape_discourse_posts(username, password):
         data = response.json()
         posts = []
         
-        # Filter topics by created_at timestamp.
         for topic in data.get("topic_list", {}).get("topics", []):
             created_at = topic.get("created_at")
             if created_at:
@@ -69,7 +76,4 @@ def login_and_scrape_discourse_posts(username, password):
         print("Failed to retrieve discourse posts; status code:", response.status_code)
 
 if __name__ == '__main__':
-    # Replace these with your actual username (or email) and password.
-    username = "username"
-    password = "password"
-    login_and_scrape_discourse_posts(username, password)
+    login_and_scrape_discourse_posts()
